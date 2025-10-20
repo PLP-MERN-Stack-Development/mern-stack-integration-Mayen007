@@ -71,12 +71,12 @@ PostSchema.pre('save', function (next) {
   if (!this.isModified('title')) {
     return next();
   }
-  
+
   this.slug = this.title
     .toLowerCase()
     .replace(/[^\w ]+/g, '')
     .replace(/ +/g, '-');
-    
+
   next();
 });
 
