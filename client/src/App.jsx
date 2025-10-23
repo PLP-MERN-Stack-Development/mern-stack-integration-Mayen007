@@ -1,35 +1,35 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import PostList from "./components/PostList";
+import SinglePost from "./components/SinglePost";
+import Navigation from "./components/Navigation";
+import { GlobalProvider } from "./context/GlobalContext";
+import CreateEditPostForm from "./components/CreateEditPostForm";
 
-function App() {
-  const [count, setCount] = useState(0)
+const App = () => {
+  useEffect(() => {
+    // Simulate fetching posts
+    const fetchPosts = async () => {
+      const response = await fetch("/api/posts");
+      const data = await response.json();
+      console.log(data); // Debugging fetched data
+    };
+    fetchPosts();
+  }, []);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <GlobalProvider>
+      <Router>
+        <Navigation />
+        <Routes>
+          <Route path="/" element={<PostList />} />
+          <Route path="/post/:id" element={<SinglePost />} />
+          <Route path="/create" element={<CreateEditPostForm />} />
+          <Route path="/edit/:id" element={<CreateEditPostForm />} />
+        </Routes>
+      </Router>
+    </GlobalProvider>
+  );
+};
 
-export default App
+export default App;
