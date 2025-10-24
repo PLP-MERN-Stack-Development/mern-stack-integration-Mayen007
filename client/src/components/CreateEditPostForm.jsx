@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useGlobalContext } from "../context/GlobalContext";
+import { useGlobalContext } from "../context/useGlobalContext";
 
 const CreateEditPostForm = () => {
   const { posts, setPosts } = useGlobalContext();
