@@ -1,15 +1,65 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 const GlobalContext = createContext();
 
 export const GlobalProvider = ({ children }) => {
   const [posts, setPosts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch posts
+        const postsResponse = await fetch("/api/posts");
+        if (!postsResponse.ok) {
+          throw new Error(`Failed to fetch posts: ${postsResponse.status}`);
+        }
+        const postsData = await postsResponse.json();
+        setPosts(Array.isArray(postsData) ? postsData : []);
+
+        // Fetch categories
+        const categoriesResponse = await fetch("/api/categories");
+        if (!categoriesResponse.ok) {
+          throw new Error(
+            `Failed to fetch categories: ${categoriesResponse.status}`
+          );
+        }
+        const categoriesData = await categoriesResponse.json();
+        setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+      } catch (err) {
+        setError(err.message);
+        console.error("Error fetching data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const value = {
+    posts,
+    setPosts,
+    categories,
+    setCategories,
+    loading,
+    error,
+  };
 
   return (
-    <GlobalContext.Provider value={{ posts, setPosts }}>
-      {children}
-    </GlobalContext.Provider>
+    <GlobalContext.Provider value={value}>{children}</GlobalContext.Provider>
   );
 };
 
-export const useGlobalContext = () => useContext(GlobalContext);
+export const useGlobalContext = () => {
+  const context = useContext(GlobalContext);
+  if (!context) {
+    throw new Error("useGlobalContext must be used within a GlobalProvider");
+  }
+  return context;
+};
