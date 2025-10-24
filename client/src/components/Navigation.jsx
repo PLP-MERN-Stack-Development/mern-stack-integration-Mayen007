@@ -1,4 +1,5 @@
 import React from "react";
+import { SignedOut, SignedIn } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
 
 const Navigation = () => {
@@ -14,11 +15,25 @@ const Navigation = () => {
               Home
             </Link>
           </li>
-          <li>
-            <Link to="/create" className="hover:underline">
-              Create Post
-            </Link>
-          </li>
+          <SignedIn>
+            <li>
+              <Link to="/create" className="hover:underline">
+                Create Post
+              </Link>
+            </li>
+          </SignedIn>
+          <SignedOut>
+            <li>
+              <Link to="/sign-in" className="hover:underline">
+                Sign In
+              </Link>
+            </li>
+            <li>
+              <Link to="/sign-up" className="hover:underline">
+                Sign Up
+              </Link>
+            </li>
+          </SignedOut>
         </ul>
       </div>
     </nav>

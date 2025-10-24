@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useGlobalContext } from "../context/useGlobalContext";
+import { useUser } from "@clerk/clerk-react";
 
 const CreateEditPostForm = () => {
-  const { posts, createPost, editPost } = useGlobalContext();
+  const { user } = useUser();
+  const { posts, categories, createPost, editPost } = useGlobalContext();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [categoryId, setCategoryId] = useState("");
   const [errors, setErrors] = useState({});
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,10 +23,13 @@ const CreateEditPostForm = () => {
       if (postToEdit) {
         setTitle(postToEdit.title);
         setContent(postToEdit.content);
+        setCategoryId(postToEdit.category || "");
         setIsEditing(true);
       }
+    } else if (categories.length > 0) {
+      setCategoryId(categories[0]._id);
     }
-  }, [id, posts]);
+  }, [id, posts, categories]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -42,6 +48,9 @@ const CreateEditPostForm = () => {
       newErrors.content = "Content must be at least 10 characters";
     }
 
+    if (!categoryId) {
+      newErrors.category = "Category is required";
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -55,7 +64,21 @@ const CreateEditPostForm = () => {
       return;
     }
 
-    const newPost = { title: title.trim(), content: content.trim() };
+    // Generate slug from title
+    const slug = title
+      .trim()
+      .toLowerCase()
+      .replace(/[^\w ]+/g, "")
+      .replace(/ +/g, "-");
+    // Use Clerk user ID as author
+    const author = user?.id || "000000000000000000000001";
+    const newPost = {
+      title: title.trim(),
+      content: content.trim(),
+      slug,
+      author,
+      category: categoryId,
+    };
     setIsSubmitting(true);
     let result;
     if (isEditing) {
@@ -115,6 +138,32 @@ const CreateEditPostForm = () => {
           />
           {errors.title && (
             <p className="mt-1 text-sm text-red-600">{errors.title}</p>
+          )}
+        </div>
+        <div>
+          <label
+            htmlFor="category"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Category
+          </label>
+          <select
+            id="category"
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+            className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${
+              errors.category ? "border-red-500" : "border-gray-300"
+            }`}
+          >
+            <option value="">Select category...</option>
+            {categories.map((cat) => (
+              <option key={cat._id} value={cat._id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
+          {errors.category && (
+            <p className="mt-1 text-sm text-red-600">{errors.category}</p>
           )}
         </div>
 
