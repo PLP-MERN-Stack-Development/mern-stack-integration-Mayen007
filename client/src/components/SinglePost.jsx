@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from "react";
+import { useGlobalContext } from "../context/useGlobalContext";
+import { useNavigate } from "react-router-dom";
 import { useParams, Link } from "react-router-dom";
 
 export default function SinglePost() {
   const { id } = useParams();
+  const { deletePost } = useGlobalContext();
+  const navigate = useNavigate();
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -104,6 +110,30 @@ export default function SinglePost() {
         />
       )}
       <p className="text-gray-700 text-lg leading-relaxed">{post.content}</p>
+      <div className="mt-6 flex gap-2">
+        <button
+          className={`py-2 px-4 rounded-md text-white font-medium bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition ${
+            deleting ? "opacity-50 cursor-not-allowed" : ""
+          }`}
+          disabled={deleting}
+          onClick={async () => {
+            setDeleteError(null);
+            setDeleting(true);
+            const result = await deletePost(post._id);
+            if (result.success) {
+              navigate("/");
+            } else {
+              setDeleteError(result.error);
+            }
+            setDeleting(false);
+          }}
+        >
+          {deleting ? "Deleting..." : "Delete Post"}
+        </button>
+        {deleteError && (
+          <span className="text-red-600 ml-2">{deleteError}</span>
+        )}
+      </div>
     </div>
   );
 }

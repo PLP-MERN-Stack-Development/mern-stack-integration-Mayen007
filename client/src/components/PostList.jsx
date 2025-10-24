@@ -3,7 +3,9 @@ import { Link } from "react-router-dom";
 import { useGlobalContext } from "../context/useGlobalContext";
 
 const PostList = () => {
-  const { posts, loading, error } = useGlobalContext();
+  const { posts, loading, error, deletePost } = useGlobalContext();
+  const [deletingId, setDeletingId] = React.useState(null);
+  const [deleteError, setDeleteError] = React.useState(null);
 
   if (loading) {
     return (
@@ -36,6 +38,12 @@ const PostList = () => {
   return (
     <div className="max-w-2xl mx-auto py-8">
       <h2 className="text-2xl font-bold mb-6 text-center">Posts</h2>
+      {deleteError && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+          <strong className="font-bold">Delete Error!</strong>
+          <span className="block sm:inline">{deleteError}</span>
+        </div>
+      )}
       <ul className="space-y-4">
         {posts.map((post) => (
           <li
@@ -48,12 +56,32 @@ const PostList = () => {
             <p className="text-gray-700 mb-4 line-clamp-2">{post.content}</p>
             <div className="flex justify-between items-center">
               <small className="text-gray-500">By {post.author}</small>
-              <Link
-                to={`/post/${post._id}`}
-                className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
-              >
-                Read More →
-              </Link>
+              <div className="flex gap-2">
+                <Link
+                  to={`/post/${post._id}`}
+                  className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+                >
+                  Read More →
+                </Link>
+                <button
+                  className={`ml-2 text-red-600 hover:text-red-800 text-sm font-medium ${
+                    deletingId === post._id
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }`}
+                  disabled={deletingId === post._id}
+                  onClick={async () => {
+                    setDeleteError(null);
+                    setDeletingId(post._id);
+                    const result = await deletePost(post._id);
+                    if (!result.success) setDeleteError(result.error);
+                    setDeletingId(null);
+                  }}
+                  title="Delete post"
+                >
+                  {deletingId === post._id ? "Deleting..." : "Delete"}
+                </button>
+              </div>
             </div>
           </li>
         ))}

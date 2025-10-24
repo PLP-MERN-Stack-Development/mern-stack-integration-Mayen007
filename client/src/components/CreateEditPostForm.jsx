@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useGlobalContext } from "../context/useGlobalContext";
 
 const CreateEditPostForm = () => {
-  const { posts, setPosts } = useGlobalContext();
+  const { posts, createPost, editPost } = useGlobalContext();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [errors, setErrors] = useState({});
@@ -56,52 +56,20 @@ const CreateEditPostForm = () => {
     }
 
     const newPost = { title: title.trim(), content: content.trim() };
-
-    try {
-      setIsSubmitting(true);
-
-      if (isEditing) {
-        // Update existing post
-        const response = await fetch(`/api/posts/${id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newPost),
-        });
-
-        if (!response.ok) {
-          throw new Error(`Failed to update post: ${response.status}`);
-        }
-
-        const updatedPost = await response.json();
-        const updatedPosts = posts.map((post) =>
-          post._id === id ? updatedPost.data || updatedPost : post
-        );
-        setPosts(updatedPosts);
-        setSubmitSuccess(true);
-        setTimeout(() => navigate("/"), 1500);
-      } else {
-        // Create new post
-        const response = await fetch("/api/posts", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newPost),
-        });
-
-        if (!response.ok) {
-          throw new Error(`Failed to create post: ${response.status}`);
-        }
-
-        const createdPost = await response.json();
-        setPosts([...posts, createdPost.data || createdPost]);
-        setSubmitSuccess(true);
-        setTimeout(() => navigate("/"), 1500);
-      }
-    } catch (err) {
-      setSubmitError(err.message);
-      console.error("Error submitting form:", err);
-    } finally {
-      setIsSubmitting(false);
+    setIsSubmitting(true);
+    let result;
+    if (isEditing) {
+      result = await editPost(id, newPost);
+    } else {
+      result = await createPost(newPost);
     }
+    if (result.success) {
+      setSubmitSuccess(true);
+      setTimeout(() => navigate("/"), 1500);
+    } else {
+      setSubmitError(result.error || "Unknown error");
+    }
+    setIsSubmitting(false);
   };
 
   return (

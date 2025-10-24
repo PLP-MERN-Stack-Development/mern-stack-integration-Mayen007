@@ -41,6 +41,81 @@ export const GlobalProvider = ({ children }) => {
     fetchData();
   }, []);
 
+  // Optimistic create post
+  const createPost = async (newPost) => {
+    // Optimistically add post to UI
+    const tempId = `temp-${Date.now()}`;
+    const optimisticPost = {
+      ...newPost,
+      _id: tempId,
+      author: "You",
+      createdAt: new Date().toISOString(),
+    };
+    setPosts((prev) => [...prev, optimisticPost]);
+    try {
+      const response = await fetch("/api/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newPost),
+      });
+      if (!response.ok)
+        throw new Error(`Failed to create post: ${response.status}`);
+      const createdPost = await response.json();
+      setPosts((prev) =>
+        prev.map((p) =>
+          p._id === tempId ? createdPost.data || createdPost : p
+        )
+      );
+      return { success: true };
+    } catch (err) {
+      setPosts((prev) => prev.filter((p) => p._id !== tempId));
+      setError(err.message);
+      return { success: false, error: err.message };
+    }
+  };
+
+  // Optimistic edit post
+  const editPost = async (id, updatedFields) => {
+    const prevPosts = [...posts];
+    setPosts((prev) =>
+      prev.map((p) => (p._id === id ? { ...p, ...updatedFields } : p))
+    );
+    try {
+      const response = await fetch(`/api/posts/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedFields),
+      });
+      if (!response.ok)
+        throw new Error(`Failed to update post: ${response.status}`);
+      const updatedPost = await response.json();
+      setPosts((prev) =>
+        prev.map((p) => (p._id === id ? updatedPost.data || updatedPost : p))
+      );
+      return { success: true };
+    } catch (err) {
+      setPosts(prevPosts);
+      setError(err.message);
+      return { success: false, error: err.message };
+    }
+  };
+
+  // Optimistic delete post
+  const deletePost = async (id) => {
+    const prevPosts = [...posts];
+    setPosts((prev) => prev.filter((p) => p._id !== id));
+    try {
+      const response = await fetch(`/api/posts/${id}`, { method: "DELETE" });
+      if (!response.ok)
+        throw new Error(`Failed to delete post: ${response.status}`);
+      return { success: true };
+    } catch (err) {
+      setPosts(prevPosts);
+      setError(err.message);
+      return { success: false, error: err.message };
+    }
+  };
+
   const value = {
     posts,
     setPosts,
@@ -48,6 +123,9 @@ export const GlobalProvider = ({ children }) => {
     setCategories,
     loading,
     error,
+    createPost,
+    editPost,
+    deletePost,
   };
 
   return (
