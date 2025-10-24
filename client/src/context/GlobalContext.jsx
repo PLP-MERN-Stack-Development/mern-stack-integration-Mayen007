@@ -2,6 +2,60 @@ import React, { useState, useEffect } from "react";
 import { GlobalContext } from "./GlobalContextDefinition";
 
 export const GlobalProvider = ({ children }) => {
+  // Optimistic create category
+  const createCategory = async (newCategory) => {
+    const tempId = `temp-cat-${Date.now()}`;
+    const optimisticCategory = { ...newCategory, _id: tempId };
+    setCategories((prev) => [...prev, optimisticCategory]);
+    try {
+      const response = await fetch("/api/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newCategory),
+      });
+      if (!response.ok)
+        throw new Error(`Failed to create category: ${response.status}`);
+      const createdCategory = await response.json();
+      setCategories((prev) =>
+        prev.map((c) =>
+          c._id === tempId ? createdCategory.data || createdCategory : c
+        )
+      );
+      return { success: true };
+    } catch (err) {
+      setCategories((prev) => prev.filter((c) => c._id !== tempId));
+      setError(err.message);
+      return { success: false, error: err.message };
+    }
+  };
+
+  // Optimistic edit category
+  const editCategory = async (id, updatedFields) => {
+    const prevCategories = [...categories];
+    setCategories((prev) =>
+      prev.map((c) => (c._id === id ? { ...c, ...updatedFields } : c))
+    );
+    try {
+      const response = await fetch(`/api/categories/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedFields),
+      });
+      if (!response.ok)
+        throw new Error(`Failed to update category: ${response.status}`);
+      const updatedCategory = await response.json();
+      setCategories((prev) =>
+        prev.map((c) =>
+          c._id === id ? updatedCategory.data || updatedCategory : c
+        )
+      );
+      return { success: true };
+    } catch (err) {
+      setCategories(prevCategories);
+      setError(err.message);
+      return { success: false, error: err.message };
+    }
+  };
   const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -126,6 +180,8 @@ export const GlobalProvider = ({ children }) => {
     createPost,
     editPost,
     deletePost,
+    createCategory,
+    editCategory,
   };
 
   return (
