@@ -10,6 +10,7 @@ const CreateEditPostForm = () => {
   const [categoryId, setCategoryId] = useState("");
   const [excerpt, setExcerpt] = useState("");
   const [tags, setTags] = useState("");
+  const [isPublished, setIsPublished] = useState(false);
   const [errors, setErrors] = useState({});
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,6 +28,7 @@ const CreateEditPostForm = () => {
         setCategoryId(postToEdit.category || "");
         setExcerpt(postToEdit.excerpt || "");
         setTags(postToEdit.tags ? postToEdit.tags.join(", ") : "");
+        setIsPublished(postToEdit.isPublished || false);
         setIsEditing(true);
       }
     } else if (categories && categories.length > 0) {
@@ -92,6 +94,7 @@ const CreateEditPostForm = () => {
       tags: processedTags,
       slug,
       category: categoryId,
+      isPublished: isPublished,
     };
 
     setIsSubmitting(true);
@@ -358,6 +361,26 @@ const CreateEditPostForm = () => {
                 <p className="mt-1 text-xs text-slate-500">
                   Separate tags with commas
                 </p>
+              </div>
+
+              {/* Publish Status */}
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  id="isPublished"
+                  checked={isPublished}
+                  onChange={(e) => setIsPublished(e.target.checked)}
+                  className="w-5 h-5 text-blue-600 bg-slate-100 border-slate-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <label
+                  htmlFor="isPublished"
+                  className="text-sm font-semibold text-slate-700"
+                >
+                  Publish this post
+                  <span className="text-slate-400 font-normal ml-2">
+                    (Unchecked posts are saved as drafts)
+                  </span>
+                </label>
               </div>
 
               {/* Content Field */}

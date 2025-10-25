@@ -2,32 +2,41 @@ import React, { useState, useEffect } from "react";
 import { useGlobalContext } from "../context/useGlobalContext";
 import { useNavigate } from "react-router-dom";
 import { useParams, Link } from "react-router-dom";
+import { postService } from "../services/api";
+import useAuth from "../context/useAuth";
 
 export default function SinglePost() {
   const { id } = useParams();
   const { deletePost } = useGlobalContext();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isUnauthorized, setIsUnauthorized] = useState(false);
 
   useEffect(() => {
     const fetchPost = async () => {
       try {
         setLoading(true);
         setError(null);
+        setIsUnauthorized(false);
 
-        const response = await fetch(`/api/posts/${id}`);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch post: ${response.status}`);
-        }
-        const data = await response.json();
+        const data = await postService.getPost(id);
         setPost(data);
       } catch (err) {
-        setError(err.message);
         console.error("Error fetching post:", err);
+
+        if (err.response && err.response.status === 403) {
+          setIsUnauthorized(true);
+          setError("This post is not available. It may be a draft or private.");
+        } else if (err.response && err.response.status === 404) {
+          setError("Post not found. It may have been deleted or moved.");
+        } else {
+          setError(err.message || "Failed to load post");
+        }
       } finally {
         setLoading(false);
       }
@@ -94,9 +103,17 @@ export default function SinglePost() {
               </div>
               <div className="ml-3">
                 <h3 className="text-sm font-medium text-red-800">
-                  Error loading post
+                  {isUnauthorized ? "Access Denied" : "Error loading post"}
                 </h3>
                 <p className="mt-1 text-sm text-red-700">{error}</p>
+                {isUnauthorized && !isAuthenticated && (
+                  <p className="mt-2 text-sm text-red-600">
+                    <Link to="/login" className="underline hover:text-red-800">
+                      Sign in
+                    </Link>{" "}
+                    to access this content, or it may be a private draft.
+                  </p>
+                )}
               </div>
             </div>
           </div>

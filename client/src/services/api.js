@@ -50,6 +50,12 @@ export const postService = {
     return response.data;
   },
 
+  // Get current user's posts (includes drafts)
+  getMyPosts: async () => {
+    const response = await api.get('/posts/my-posts');
+    return response.data;
+  },
+
   // Get a single post by ID or slug
   getPost: async (idOrSlug) => {
     const response = await api.get(`/posts/${idOrSlug}`);
@@ -71,6 +77,12 @@ export const postService = {
   // Delete a post
   deletePost: async (id) => {
     const response = await api.delete(`/posts/${id}`);
+    return response.data;
+  },
+
+  // Publish or unpublish a post
+  publishPost: async (id, isPublished) => {
+    const response = await api.patch(`/posts/${id}/publish`, { isPublished });
     return response.data;
   },
 
