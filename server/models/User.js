@@ -3,10 +3,17 @@ const bcrypt = require('bcrypt');
 
 const UserSchema = new mongoose.Schema(
   {
+    name: {
+      type: String,
+      required: [true, 'Name is required'],
+      trim: true,
+      minlength: [2, 'Name must be at least 2 characters'],
+      maxlength: [100, 'Name cannot exceed 100 characters']
+    },
     username: {
       type: String,
-      required: [true, 'Username is required'],
       unique: true,
+      sparse: true, // allows null values to be non-unique
       trim: true,
       minlength: [3, 'Username must be at least 3 characters'],
       maxlength: [30, 'Username cannot exceed 30 characters']

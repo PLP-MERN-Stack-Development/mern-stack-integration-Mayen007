@@ -1,22 +1,5 @@
 @import "tailwindcss";
 
-/* Custom scrollbar for webkit browsers */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  @apply bg-slate-100;
-}
-
-::-webkit-scrollbar-thumb {
-  @apply bg-slate-400 rounded-full;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-slate-500;
-}
-
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
@@ -61,6 +44,7 @@ html {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .line-clamp-3 {
@@ -68,11 +52,14 @@ html {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
 }
 
 /* Focus visible for better accessibility */
 .focus-visible:focus-visible {
-  @apply ring-2 ring-blue-500 ring-offset-2 outline-none;
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  box-shadow: none;
 }
 
 /* Custom gradient backgrounds */

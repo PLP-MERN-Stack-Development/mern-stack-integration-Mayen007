@@ -40,7 +40,7 @@ export default function SinglePost() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100">
         <div className="flex justify-center items-center h-96">
           <div className="text-center">
             <div className="relative">
@@ -56,7 +56,7 @@ export default function SinglePost() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 px-4 py-12">
+      <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100 px-4 py-12">
         <div className="max-w-4xl mx-auto">
           <Link
             to="/"
@@ -79,7 +79,7 @@ export default function SinglePost() {
           </Link>
           <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-r-lg shadow-sm">
             <div className="flex items-center">
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 <svg
                   className="h-5 w-5 text-red-500"
                   fill="currentColor"
@@ -107,7 +107,7 @@ export default function SinglePost() {
 
   if (!post) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 px-4 py-12">
+      <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100 px-4 py-12">
         <div className="max-w-4xl mx-auto text-center">
           <Link
             to="/"
@@ -156,7 +156,7 @@ export default function SinglePost() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Navigation */}
       <div className="bg-white border-b border-slate-200 sticky top-16 z-40">
         <div className="max-w-4xl mx-auto px-4 py-4">
@@ -186,14 +186,14 @@ export default function SinglePost() {
       <div className="max-w-4xl mx-auto px-4 py-12">
         <article className="bg-white rounded-xl shadow-lg overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white px-8 py-12">
+          <div className="bg-linear-to-r from-slate-900 via-slate-800 to-slate-900 text-white px-8 py-12">
             <h1 className="text-3xl md:text-4xl font-bold mb-6 leading-tight">
               {post.title}
             </h1>
 
             {/* Author Info */}
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 bg-linear-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                 <span className="text-white text-lg font-bold">
                   {typeof post.author === "string"
                     ? post.author.charAt(0).toUpperCase()
@@ -260,7 +260,7 @@ export default function SinglePost() {
             <div className="mt-12 pt-8 border-t border-slate-200 flex flex-wrap gap-4">
               <Link
                 to={`/edit/${post._id}`}
-                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-purple-700 transform hover:-translate-y-0.5 transition-all duration-200 shadow-lg hover:shadow-xl"
+                className="inline-flex items-center px-6 py-3 bg-linear-to-r from-blue-500 to-purple-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-purple-700 transform hover:-translate-y-0.5 transition-all duration-200 shadow-lg hover:shadow-xl"
               >
                 <svg
                   className="w-4 h-4 mr-2"
@@ -351,7 +351,7 @@ export default function SinglePost() {
             {deleteError && (
               <div className="mt-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
                 <div className="flex items-center">
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     <svg
                       className="h-5 w-5 text-red-500"
                       fill="currentColor"

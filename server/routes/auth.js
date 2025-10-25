@@ -1,7 +1,19 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
+const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const router = express.Router();
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-here';
+
+// Helper function to generate JWT token
+const generateToken = (user) => {
+  return jwt.sign(
+    { userId: user._id, email: user.email, name: user.name },
+    JWT_SECRET,
+    { expiresIn: '24h' }
+  );
+};
 
 // REGISTER new user
 router.post(
@@ -20,7 +32,23 @@ router.post(
       const userData = req.body;
       const newUser = new User(userData);
       await newUser.save();
-      res.status(201).json({ message: 'User registered successfully', data: newUser });
+
+      // Generate JWT token
+      const token = generateToken(newUser);
+
+      // Don't send password in response
+      const userResponse = {
+        _id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        createdAt: newUser.createdAt
+      };
+
+      res.status(201).json({
+        message: 'User registered successfully',
+        data: userResponse,
+        token
+      });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
@@ -48,7 +76,23 @@ router.post(
       if (!isMatch) {
         return res.status(401).json({ message: 'Invalid credentials' });
       }
-      res.status(200).json({ message: 'Login successful', data: user });
+
+      // Generate JWT token
+      const token = generateToken(user);
+
+      // Don't send password in response
+      const userResponse = {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        createdAt: user.createdAt
+      };
+
+      res.status(200).json({
+        message: 'Login successful',
+        data: userResponse,
+        token
+      });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }

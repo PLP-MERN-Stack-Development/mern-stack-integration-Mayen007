@@ -2,6 +2,7 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const Post = require('../models/Post');
+const { authenticateToken } = require('../middleware/auth');
 const router = express.Router();
 
 // GET all posts
@@ -29,14 +30,14 @@ router.get('/:id', async (req, res) => {
 });
 
 
-// CREATE new post
+// CREATE new post (Protected route)
 router.post(
   '/',
+  authenticateToken,
   [
     body('title').isString().trim().notEmpty().isLength({ max: 100 }),
     body('content').isString().notEmpty(),
     body('slug').isString().notEmpty(),
-    body('author').isMongoId(),
     body('category').isMongoId(),
   ],
   async (req, res) => {
@@ -45,7 +46,10 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
     try {
-      const postData = req.body;
+      const postData = {
+        ...req.body,
+        author: req.user.userId // Use authenticated user's ID
+      };
       const newPost = new Post(postData);
       await newPost.save();
       res.status(201).json({ message: 'Post created successfully', data: newPost });
@@ -56,14 +60,14 @@ router.post(
 );
 
 
-// UPDATE post by ID
+// UPDATE post by ID (Protected route - only author can update)
 router.put(
   '/:id',
+  authenticateToken,
   [
     body('title').optional().isString().trim().notEmpty().isLength({ max: 100 }),
     body('content').optional().isString().notEmpty(),
     body('slug').optional().isString().notEmpty(),
-    body('author').optional().isMongoId(),
     body('category').optional().isMongoId(),
   ],
   async (req, res) => {
@@ -74,10 +78,18 @@ router.put(
     try {
       const { id } = req.params;
       const updateData = req.body;
-      const post = await Post.findByIdAndUpdate(id, updateData, { new: true });
-      if (!post) {
+
+      // First check if post exists and user is the author
+      const existingPost = await Post.findById(id);
+      if (!existingPost) {
         return res.status(404).json({ message: 'Post not found' });
       }
+
+      if (existingPost.author.toString() !== req.user.userId) {
+        return res.status(403).json({ message: 'You can only update your own posts' });
+      }
+
+      const post = await Post.findByIdAndUpdate(id, updateData, { new: true });
       res.status(200).json({ message: `Post ${id} updated successfully`, data: post });
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -85,10 +97,21 @@ router.put(
   }
 );
 
-// DELETE post by ID
-router.delete('/:id', async (req, res) => {
+// DELETE post by ID (Protected route - only author can delete)
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
+
+    // First check if post exists and user is the author
+    const existingPost = await Post.findById(id);
+    if (!existingPost) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    if (existingPost.author.toString() !== req.user.userId) {
+      return res.status(403).json({ message: 'You can only delete your own posts' });
+    }
+
     await Post.findByIdAndDelete(id);
     res.status(200).json({ message: `Post ${id} deleted successfully` });
   } catch (error) {

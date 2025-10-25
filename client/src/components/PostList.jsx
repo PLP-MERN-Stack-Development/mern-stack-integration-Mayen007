@@ -9,7 +9,7 @@ const PostList = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100">
         <div className="flex justify-center items-center h-96">
           <div className="text-center">
             <div className="relative">
@@ -27,11 +27,11 @@ const PostList = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 px-4 py-12">
+      <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100 px-4 py-12">
         <div className="max-w-2xl mx-auto">
           <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-r-lg shadow-sm">
             <div className="flex items-center">
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 <svg
                   className="h-5 w-5 text-red-500"
                   fill="currentColor"
@@ -59,7 +59,7 @@ const PostList = () => {
 
   if (!posts || posts.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100">
         <div className="flex flex-col items-center justify-center h-96 px-4">
           <div className="text-center">
             <svg
@@ -83,7 +83,7 @@ const PostList = () => {
             </p>
             <Link
               to="/create"
-              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-purple-700 transform hover:-translate-y-0.5 transition-all duration-200 shadow-lg hover:shadow-xl"
+              className="inline-flex items-center px-6 py-3 bg-linear-to-r from-blue-500 to-purple-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-purple-700 transform hover:-translate-y-0.5 transition-all duration-200 shadow-lg hover:shadow-xl"
             >
               Create Your First Post
             </Link>
@@ -94,11 +94,11 @@ const PostList = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white py-16">
+      <div className="bg-linear-to-r from-slate-900 via-slate-800 to-slate-900 text-white py-16">
         <div className="max-w-6xl mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
             Latest Posts
           </h1>
           <p className="text-xl text-slate-300 max-w-2xl mx-auto">
@@ -112,7 +112,7 @@ const PostList = () => {
         {deleteError && (
           <div className="mb-8 bg-red-50 border-l-4 border-red-500 p-6 rounded-r-lg shadow-sm">
             <div className="flex items-center">
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 <svg
                   className="h-5 w-5 text-red-500"
                   fill="currentColor"
@@ -143,7 +143,7 @@ const PostList = () => {
               className="group bg-white rounded-xl shadow-sm hover:shadow-xl border border-slate-200 overflow-hidden transition-all duration-300 hover:-translate-y-1"
             >
               {/* Post Header */}
-              <div className="h-48 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 relative overflow-hidden">
+              <div className="h-48 bg-linear-to-br from-blue-500 via-purple-500 to-pink-500 relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/20"></div>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <h2 className="text-white text-xl font-bold px-6 text-center line-clamp-3">
@@ -178,7 +178,7 @@ const PostList = () => {
                 {/* Meta Info */}
                 <div className="flex items-center justify-between text-sm text-slate-500 mb-4">
                   <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                    <div className="w-8 h-8 bg-linear-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                       <span className="text-white text-xs font-bold">
                         {typeof post.author === "string"
                           ? post.author.charAt(0).toUpperCase()
@@ -197,7 +197,7 @@ const PostList = () => {
                 <div className="flex items-center justify-between pt-4 border-t border-slate-100">
                   <Link
                     to={`/posts/${post._id}`}
-                    className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm font-medium rounded-lg hover:from-blue-600 hover:to-purple-700 transform hover:-translate-y-0.5 transition-all duration-200 shadow-md hover:shadow-lg"
+                    className="inline-flex items-center px-4 py-2 bg-linear-to-r from-blue-500 to-purple-600 text-white text-sm font-medium rounded-lg hover:from-blue-600 hover:to-purple-700 transform hover:-translate-y-0.5 transition-all duration-200 shadow-md hover:shadow-lg"
                   >
                     Read More
                     <svg
@@ -281,7 +281,7 @@ const PostList = () => {
         <div className="text-center mt-16">
           <Link
             to="/create"
-            className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-600 hover:to-purple-700 transform hover:-translate-y-1 transition-all duration-200 shadow-lg hover:shadow-xl"
+            className="inline-flex items-center px-8 py-4 bg-linear-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-600 hover:to-purple-700 transform hover:-translate-y-1 transition-all duration-200 shadow-lg hover:shadow-xl"
           >
             <svg
               className="w-5 h-5 mr-2"

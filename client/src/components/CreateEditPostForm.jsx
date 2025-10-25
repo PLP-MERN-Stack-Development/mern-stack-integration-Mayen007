@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useGlobalContext } from "../context/useGlobalContext";
-import { useUser } from "@clerk/clerk-react";
 
 const CreateEditPostForm = () => {
-  const { user } = useUser();
   const { posts, categories, createPost, editPost, loading } =
     useGlobalContext();
   const [title, setTitle] = useState("");
@@ -87,15 +85,12 @@ const CreateEditPostForm = () => {
       .map((tag) => tag.trim())
       .filter((tag) => tag.length > 0);
 
-    // Use Clerk user ID as author
-    const author = user?.id || "000000000000000000000001";
     const newPost = {
       title: title.trim(),
       content: content.trim(),
       excerpt: excerpt.trim(),
       tags: processedTags,
       slug,
-      author,
       category: categoryId,
     };
 
@@ -118,7 +113,7 @@ const CreateEditPostForm = () => {
   // Show loading state while data is being fetched
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-slate-600">Loading...</p>
@@ -128,9 +123,9 @@ const CreateEditPostForm = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Header */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white py-16">
+      <div className="bg-linear-to-r from-slate-900 via-slate-800 to-slate-900 text-white py-16">
         <div className="max-w-4xl mx-auto px-4">
           <Link
             to="/"
@@ -151,7 +146,7 @@ const CreateEditPostForm = () => {
             </svg>
             Back to Posts
           </Link>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-lienar-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
             {isEditing ? "Edit Post" : "Create New Post"}
           </h1>
           <p className="text-xl text-slate-300">
@@ -170,7 +165,7 @@ const CreateEditPostForm = () => {
             {submitSuccess && (
               <div className="mb-8 bg-green-50 border-l-4 border-green-500 p-6 rounded-r-lg shadow-sm">
                 <div className="flex items-center">
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     <svg
                       className="h-5 w-5 text-green-500"
                       fill="currentColor"
@@ -200,7 +195,7 @@ const CreateEditPostForm = () => {
             {submitError && (
               <div className="mb-8 bg-red-50 border-l-4 border-red-500 p-6 rounded-r-lg shadow-sm">
                 <div className="flex items-center">
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     <svg
                       className="h-5 w-5 text-red-500"
                       fill="currentColor"
@@ -414,7 +409,7 @@ const CreateEditPostForm = () => {
                   className={`flex-1 inline-flex items-center justify-center px-6 py-4 text-white font-semibold rounded-lg transition-all duration-200 ${
                     isSubmitting
                       ? "bg-slate-400 cursor-not-allowed"
-                      : "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
+                      : "bg-linear-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
                   }`}
                 >
                   {isSubmitting ? (
