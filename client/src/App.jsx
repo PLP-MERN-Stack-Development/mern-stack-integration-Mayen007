@@ -1,14 +1,4 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import React from "react";
-import {
-  SignedIn,
-  SignedOut,
-  SignIn,
-  SignUp,
-  UserButton,
-  useUser,
-} from "@clerk/clerk-react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import PostList from "./components/PostList";
 import SinglePost from "./components/SinglePost";
@@ -17,28 +7,10 @@ import { GlobalProvider } from "./context/GlobalContext";
 import CreateEditPostForm from "./components/CreateEditPostForm";
 
 const App = () => {
-  // SSO callback redirect component
-  const SsoRedirect = () => {
-    const navigate = useNavigate();
-    useEffect(() => {
-      navigate("/", { replace: true });
-    }, [navigate]);
-    return null;
-  };
-  // Show user info in navigation
-  const { user } = useUser();
   return (
     <GlobalProvider>
       <Router>
         <Navigation />
-        <div className="flex justify-end items-center p-2">
-          <SignedIn>
-            <span className="mr-2">
-              Hello, {user?.firstName || user?.username || "User"}
-            </span>
-            <UserButton afterSignOutUrl="/" />
-          </SignedIn>
-        </div>
         <Routes>
           <Route path="/sign-in/sso-callback" element={<SsoRedirect />} />
           <Route path="/" element={<PostList />} />
@@ -79,6 +51,7 @@ const App = () => {
               </SignedIn>
             }
           />
+          <Route path="/posts/:id" element={<SinglePost />} />
         </Routes>
       </Router>
     </GlobalProvider>

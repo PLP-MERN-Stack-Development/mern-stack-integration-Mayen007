@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { GlobalContext } from "./GlobalContextDefinition";
+import { postService, categoryService } from "../services/api";
 
 export const GlobalProvider = ({ children }) => {
   // Optimistic create category
@@ -8,34 +9,30 @@ export const GlobalProvider = ({ children }) => {
     const optimisticCategory = { ...newCategory, _id: tempId };
     setCategories((prev) => [...prev, optimisticCategory]);
     try {
-      const response = await fetch("/api/categories", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newCategory),
-      });
-      if (!response.ok)
-        throw new Error(`Failed to create category: ${response.status}`);
-      const createdCategory = await response.json();
+      const result = await categoryService.createCategory(newCategory);
+      const createdCategory = result.data || result;
       setCategories((prev) =>
-        prev.map((c) =>
-          c._id === tempId ? createdCategory.data || createdCategory : c
-        )
+        prev.map((c) => (c._id === tempId ? createdCategory : c))
       );
       return { success: true };
     } catch (err) {
       setCategories((prev) => prev.filter((c) => c._id !== tempId));
-      setError(err.message);
-      return { success: false, error: err.message };
+      setError(err.message || "Failed to create category");
+      return {
+        success: false,
+        error: err.message || "Failed to create category",
+      };
     }
   };
 
-  // Optimistic edit category
+  // Optimistic edit category (note: this function isn't implemented in categoryService)
   const editCategory = async (id, updatedFields) => {
     const prevCategories = [...categories];
     setCategories((prev) =>
       prev.map((c) => (c._id === id ? { ...c, ...updatedFields } : c))
     );
     try {
+      // For now, keeping the direct fetch since updateCategory isn't in categoryService
       const response = await fetch(`/api/categories/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -52,8 +49,11 @@ export const GlobalProvider = ({ children }) => {
       return { success: true };
     } catch (err) {
       setCategories(prevCategories);
-      setError(err.message);
-      return { success: false, error: err.message };
+      setError(err.message || "Failed to update category");
+      return {
+        success: false,
+        error: err.message || "Failed to update category",
+      };
     }
   };
   const [posts, setPosts] = useState([]);
@@ -67,22 +67,13 @@ export const GlobalProvider = ({ children }) => {
         setLoading(true);
         setError(null);
 
-        // Fetch posts
-        const postsResponse = await fetch("/api/posts");
-        if (!postsResponse.ok) {
-          throw new Error(`Failed to fetch posts: ${postsResponse.status}`);
-        }
-        const postsData = await postsResponse.json();
-        setPosts(Array.isArray(postsData) ? postsData : []);
+        // Fetch posts and categories in parallel
+        const [postsData, categoriesData] = await Promise.all([
+          postService.getAllPosts(),
+          categoryService.getAllCategories(),
+        ]);
 
-        // Fetch categories
-        const categoriesResponse = await fetch("/api/categories");
-        if (!categoriesResponse.ok) {
-          throw new Error(
-            `Failed to fetch categories: ${categoriesResponse.status}`
-          );
-        }
-        const categoriesData = await categoriesResponse.json();
+        setPosts(Array.isArray(postsData) ? postsData : []);
         setCategories(Array.isArray(categoriesData) ? categoriesData : []);
       } catch (err) {
         setError(err.message);
@@ -107,24 +98,14 @@ export const GlobalProvider = ({ children }) => {
     };
     setPosts((prev) => [...prev, optimisticPost]);
     try {
-      const response = await fetch("/api/posts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newPost),
-      });
-      if (!response.ok)
-        throw new Error(`Failed to create post: ${response.status}`);
-      const createdPost = await response.json();
-      setPosts((prev) =>
-        prev.map((p) =>
-          p._id === tempId ? createdPost.data || createdPost : p
-        )
-      );
+      const result = await postService.createPost(newPost);
+      const createdPost = result.data || result;
+      setPosts((prev) => prev.map((p) => (p._id === tempId ? createdPost : p)));
       return { success: true };
     } catch (err) {
       setPosts((prev) => prev.filter((p) => p._id !== tempId));
-      setError(err.message);
-      return { success: false, error: err.message };
+      setError(err.message || "Failed to create post");
+      return { success: false, error: err.message || "Failed to create post" };
     }
   };
 
@@ -135,22 +116,14 @@ export const GlobalProvider = ({ children }) => {
       prev.map((p) => (p._id === id ? { ...p, ...updatedFields } : p))
     );
     try {
-      const response = await fetch(`/api/posts/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedFields),
-      });
-      if (!response.ok)
-        throw new Error(`Failed to update post: ${response.status}`);
-      const updatedPost = await response.json();
-      setPosts((prev) =>
-        prev.map((p) => (p._id === id ? updatedPost.data || updatedPost : p))
-      );
+      const result = await postService.updatePost(id, updatedFields);
+      const updatedPost = result.data || result;
+      setPosts((prev) => prev.map((p) => (p._id === id ? updatedPost : p)));
       return { success: true };
     } catch (err) {
       setPosts(prevPosts);
-      setError(err.message);
-      return { success: false, error: err.message };
+      setError(err.message || "Failed to update post");
+      return { success: false, error: err.message || "Failed to update post" };
     }
   };
 
@@ -159,14 +132,12 @@ export const GlobalProvider = ({ children }) => {
     const prevPosts = [...posts];
     setPosts((prev) => prev.filter((p) => p._id !== id));
     try {
-      const response = await fetch(`/api/posts/${id}`, { method: "DELETE" });
-      if (!response.ok)
-        throw new Error(`Failed to delete post: ${response.status}`);
+      await postService.deletePost(id);
       return { success: true };
     } catch (err) {
       setPosts(prevPosts);
-      setError(err.message);
-      return { success: false, error: err.message };
+      setError(err.message || "Failed to delete post");
+      return { success: false, error: err.message || "Failed to delete post" };
     }
   };
 
