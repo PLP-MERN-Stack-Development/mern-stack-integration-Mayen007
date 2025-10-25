@@ -60,10 +60,13 @@ const UserSchema = new mongoose.Schema(
 UserSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   try {
+    console.log('Hashing password for user:', this.email);
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
+    console.log('Password hashed successfully');
     return next();
   } catch (err) {
+    console.error('Password hashing error:', err);
     return next(err);
   }
 });

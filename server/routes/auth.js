@@ -30,8 +30,19 @@ router.post(
     }
     try {
       const userData = req.body;
+      console.log('Registration attempt with data:', userData);
+
+      // Check if user already exists
+      const existingUser = await User.findOne({ email: userData.email });
+      if (existingUser) {
+        return res.status(409).json({ error: 'User with this email already exists' });
+      }
+
       const newUser = new User(userData);
+      console.log('Created new user object:', { name: newUser.name, email: newUser.email });
+
       await newUser.save();
+      console.log('User saved successfully');
 
       // Generate JWT token
       const token = generateToken(newUser);
@@ -50,6 +61,7 @@ router.post(
         token
       });
     } catch (error) {
+      console.error('Registration error:', error);
       res.status(500).json({ error: error.message });
     }
   }
