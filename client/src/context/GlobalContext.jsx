@@ -72,6 +72,9 @@ export const GlobalProvider = ({ children }) => {
   const [isSearching, setIsSearching] = useState(false);
   const [isSearchMode, setIsSearchMode] = useState(false);
 
+  // Category filter state
+  const [selectedCategory, setSelectedCategory] = useState(null);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -80,7 +83,7 @@ export const GlobalProvider = ({ children }) => {
 
         // Fetch posts and categories in parallel
         const [postsResponse, categoriesData] = await Promise.all([
-          postService.getAllPosts(currentPage, postsPerPage),
+          postService.getAllPosts(currentPage, postsPerPage, selectedCategory),
           categoryService.getAllCategories(),
         ]);
 
@@ -106,7 +109,7 @@ export const GlobalProvider = ({ children }) => {
     };
 
     fetchData();
-  }, [currentPage, postsPerPage]);
+  }, [currentPage, postsPerPage, selectedCategory]);
 
   // Optimistic create post
   const createPost = async (newPost) => {
@@ -256,6 +259,9 @@ export const GlobalProvider = ({ children }) => {
     isSearchMode,
     searchPosts,
     clearSearch,
+    // Category filtering
+    selectedCategory,
+    setSelectedCategory,
   };
 
   return (

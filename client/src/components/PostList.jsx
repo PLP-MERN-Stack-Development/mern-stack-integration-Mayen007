@@ -22,6 +22,10 @@ const PostList = () => {
     isSearchMode,
     searchPosts,
     clearSearch,
+    // Category filtering
+    selectedCategory,
+    setSelectedCategory,
+    categories,
   } = useGlobalContext();
   const [deletingId, setDeletingId] = React.useState(null);
   const [deleteError, setDeleteError] = React.useState(null);
@@ -154,6 +158,52 @@ const PostList = () => {
           </div>
         )}
 
+        {/* Category Filter Section */}
+        <div className="mb-6">
+          <div className="max-w-md mx-auto">
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <label
+                  htmlFor="category-filter"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Filter by Category
+                </label>
+                <select
+                  id="category-filter"
+                  value={selectedCategory || ""}
+                  onChange={(e) => {
+                    const value = e.target.value || null;
+                    setSelectedCategory(value);
+                    // Clear search when category filter is applied
+                    if (value && isSearchMode) {
+                      clearSearch();
+                    }
+                  }}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
+                >
+                  <option value="">All Categories</option>
+                  {categories.map((category) => (
+                    <option key={category._id} value={category._id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {selectedCategory && (
+                <div className="flex items-end">
+                  <button
+                    onClick={() => setSelectedCategory(null)}
+                    className="px-4 py-2 bg-gray-500 text-white font-medium rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200 shadow-sm"
+                  >
+                    Clear Filter
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Search Section */}
         <div className="mb-8">
           <div className="max-w-md mx-auto">
@@ -162,6 +212,10 @@ const PostList = () => {
                 e.preventDefault();
                 if (searchQuery.trim()) {
                   searchPosts(searchQuery.trim());
+                  // Clear category filter when search is performed
+                  if (selectedCategory) {
+                    setSelectedCategory(null);
+                  }
                 }
               }}
               className="flex gap-2"

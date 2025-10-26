@@ -34,6 +34,11 @@ router.get('/', async (req, res) => {
       query = { isPublished: true };
     }
 
+    // Add category filter if provided
+    if (req.query.category) {
+      query.category = req.query.category;
+    }
+
     // Pagination parameters
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
