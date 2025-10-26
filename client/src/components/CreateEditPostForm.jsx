@@ -10,6 +10,7 @@ const CreateEditPostForm = () => {
   const [categoryId, setCategoryId] = useState("");
   const [excerpt, setExcerpt] = useState("");
   const [tags, setTags] = useState("");
+  const [featuredImage, setFeaturedImage] = useState(null);
   const [isPublished, setIsPublished] = useState(false);
   const [errors, setErrors] = useState({});
   const [isEditing, setIsEditing] = useState(false);
@@ -28,6 +29,7 @@ const CreateEditPostForm = () => {
         setCategoryId(postToEdit.category || "");
         setExcerpt(postToEdit.excerpt || "");
         setTags(postToEdit.tags ? postToEdit.tags.join(", ") : "");
+        setFeaturedImage(postToEdit.featuredImage || null);
         setIsPublished(postToEdit.isPublished || false);
         setIsEditing(true);
       }
@@ -87,22 +89,25 @@ const CreateEditPostForm = () => {
       .map((tag) => tag.trim())
       .filter((tag) => tag.length > 0);
 
-    const newPost = {
-      title: title.trim(),
-      content: content.trim(),
-      excerpt: excerpt.trim(),
-      tags: processedTags,
-      slug,
-      category: categoryId,
-      isPublished: isPublished,
-    };
+    const formData = new FormData();
+    formData.append("title", title.trim());
+    formData.append("content", content.trim());
+    formData.append("excerpt", excerpt.trim());
+    formData.append("tags", processedTags.join(","));
+    formData.append("slug", slug);
+    formData.append("category", categoryId);
+    formData.append("isPublished", isPublished.toString());
+    if (featuredImage) {
+      console.log("Featured image before appending:", featuredImage);
+      formData.append("featuredImage", featuredImage);
+    }
 
     setIsSubmitting(true);
     let result;
     if (isEditing) {
-      result = await editPost(id, newPost);
+      result = await editPost(id, formData);
     } else {
-      result = await createPost(newPost);
+      result = await createPost(formData);
     }
     if (result.success) {
       setSubmitSuccess(true);
@@ -381,6 +386,28 @@ const CreateEditPostForm = () => {
                     (Unchecked posts are saved as drafts)
                   </span>
                 </label>
+              </div>
+
+              {/* Featured Image Field */}
+              <div className="mb-6">
+                <label
+                  htmlFor="featuredImage"
+                  className="block text-sm font-medium text-slate-700 mb-2"
+                >
+                  Featured Image
+                </label>
+                <input
+                  type="file"
+                  id="featuredImage"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"
+                  onChange={(e) => setFeaturedImage(e.target.files[0])}
+                  accept="image/*"
+                />
+                {featuredImage && typeof featuredImage === "string" && (
+                  <p className="mt-2 text-sm text-slate-500">
+                    Current image: {featuredImage.split("/").pop()}
+                  </p>
+                )}
               </div>
 
               {/* Content Field */}

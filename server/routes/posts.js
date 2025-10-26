@@ -1,8 +1,8 @@
-
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const Post = require('../models/Post');
 const { authenticateToken } = require('../middleware/auth');
+const upload = require('../middleware/upload');
 const router = express.Router();
 
 // GET all posts (public - only published posts, or user's own posts if authenticated)
@@ -106,23 +106,38 @@ router.get('/:id', async (req, res) => {
 router.post(
   '/',
   authenticateToken,
+  upload,
   [
     body('title').isString().trim().notEmpty().isLength({ max: 100 }),
     body('content').isString().notEmpty(),
     body('slug').isString().notEmpty(),
     body('category').isMongoId(),
-    body('isPublished').optional().isBoolean(),
+    body('isPublished').optional().isIn(['true', 'false']).toBoolean(),
   ],
   async (req, res) => {
+    console.log('POST /api/posts - req.body:', req.body);
+    console.log('POST /api/posts - req.file:', req.file);
+    console.log('Incoming request body:', req.body);
+    console.log('Incoming request file:', req.file);
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
     try {
-      const postData = {
-        ...req.body,
-        author: req.user._id || req.user.userId // Use authenticated user's ID
-      };
+      // Ensure featuredImage is a string path. Multer puts a file object on req.file;
+      // client may also send a featuredImage field (e.g. when editing). Sanitize that.
+      const postData = { ...req.body };
+
+      // If multer provided a file, use its public uploads path.
+      if (req.file && req.file.filename) {
+        postData.featuredImage = `/uploads/${req.file.filename}`;
+      } else if (postData.featuredImage && typeof postData.featuredImage === 'object') {
+        // Remove any accidental object that would fail Mongoose string cast
+        delete postData.featuredImage;
+      }
+
+      // Ensure author is set from the authenticated user
+      postData.author = req.user._id || req.user.userId;
 
       const newPost = new Post(postData);
       await newPost.save();
@@ -130,6 +145,11 @@ router.post(
       res.status(201).json({ message: 'Post created successfully', data: newPost });
     } catch (error) {
       console.error('Post creation error:', error);
+      // If Mongoose validation error, return 400 with details
+      if (error.name === 'ValidationError') {
+        const details = Object.values(error.errors).map((e) => e.message);
+        return res.status(400).json({ errors: details });
+      }
       res.status(500).json({ error: error.message });
     }
   }
@@ -140,20 +160,31 @@ router.post(
 router.put(
   '/:id',
   authenticateToken,
+  upload,
   [
     body('title').optional().isString().trim().notEmpty().isLength({ max: 100 }),
     body('content').optional().isString().notEmpty(),
     body('slug').optional().isString().notEmpty(),
     body('category').optional().isMongoId(),
+    body('isPublished').optional().isIn(['true', 'false']).toBoolean(),
   ],
   async (req, res) => {
+    console.log('PUT /api/posts/:id - req.body:', req.body);
+    console.log('PUT /api/posts/:id - req.file:', req.file);
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
     try {
       const { id } = req.params;
-      const updateData = req.body;
+      const updateData = { ...req.body };
+
+      if (req.file && req.file.filename) {
+        updateData.featuredImage = `/uploads/${req.file.filename}`;
+      } else if (updateData.featuredImage && typeof updateData.featuredImage === 'object') {
+        // Remove invalid object-valued featuredImage so Mongoose won't attempt to cast it
+        delete updateData.featuredImage;
+      }
 
       // First check if post exists and user is the author
       const existingPost = await Post.findById(id);
@@ -161,13 +192,19 @@ router.put(
         return res.status(404).json({ message: 'Post not found' });
       }
 
-      if (existingPost.author.toString() !== req.user.userId) {
+      const requesterId = req.user && (req.user._id ? req.user._id.toString() : req.user.userId);
+      if (existingPost.author.toString() !== requesterId) {
         return res.status(403).json({ message: 'You can only update your own posts' });
       }
 
       const post = await Post.findByIdAndUpdate(id, updateData, { new: true });
       res.status(200).json({ message: `Post ${id} updated successfully`, data: post });
     } catch (error) {
+      console.error('Post update error:', error);
+      if (error.name === 'ValidationError') {
+        const details = Object.values(error.errors).map((e) => e.message);
+        return res.status(400).json({ errors: details });
+      }
       res.status(500).json({ error: error.message });
     }
   }
@@ -184,7 +221,8 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ message: 'Post not found' });
     }
 
-    if (existingPost.author.toString() !== req.user.userId) {
+    const requesterId = req.user && (req.user._id ? req.user._id.toString() : req.user.userId);
+    if (existingPost.author.toString() !== requesterId) {
       return res.status(403).json({ message: 'You can only delete your own posts' });
     }
 
@@ -207,7 +245,8 @@ router.patch('/:id/publish', authenticateToken, async (req, res) => {
     }
 
     // Check if user is the author
-    if (post.author.toString() !== req.user._id.toString()) {
+    const requesterId = req.user && (req.user._id ? req.user._id.toString() : req.user.userId);
+    if (post.author.toString() !== requesterId) {
       return res.status(403).json({ message: 'You can only publish/unpublish your own posts' });
     }
 

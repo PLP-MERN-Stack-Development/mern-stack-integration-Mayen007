@@ -88,6 +88,7 @@ export const GlobalProvider = ({ children }) => {
 
   // Optimistic create post
   const createPost = async (newPost) => {
+    console.log("Creating post with data:", newPost);
     // Optimistically add post to UI
     const tempId = `temp-${Date.now()}`;
     const optimisticPost = {
