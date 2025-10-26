@@ -136,8 +136,8 @@ mern-blog/
    ```
 
 7. **Access the application**
-   - Frontend: http://localhost:5173
-   - Backend API: http://localhost:5000
+   - Frontend: https://mern-blog-5k7g.onrender.com/
+   - Backend API: https://bloghub-a6mc.onrender.com
 
 ## 📖 Usage
 
