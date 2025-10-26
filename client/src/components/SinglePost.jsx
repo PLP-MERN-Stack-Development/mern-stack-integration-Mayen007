@@ -8,7 +8,7 @@ import useAuth from "../context/useAuth";
 export default function SinglePost() {
   const { id } = useParams();
   const { deletePost } = useGlobalContext();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
@@ -16,6 +16,14 @@ export default function SinglePost() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isUnauthorized, setIsUnauthorized] = useState(false);
+
+  // Check if current user can edit/delete this post
+  const canModifyPost = () => {
+    if (!isAuthenticated || !user || !post) return false;
+    const postAuthorId =
+      typeof post.author === "object" ? post.author._id : post.author;
+    return user._id === postAuthorId;
+  };
 
   // Comments state
   const [comments, setComments] = useState([]);
@@ -326,95 +334,97 @@ export default function SinglePost() {
             )}
 
             {/* Action Buttons */}
-            <div className="mt-12 pt-8 border-t border-slate-200 flex flex-wrap gap-4">
-              <Link
-                to={`/edit/${post._id}`}
-                className="inline-flex items-center px-6 py-3 bg-linear-to-r from-blue-500 to-purple-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-purple-700 transform hover:-translate-y-0.5 transition-all duration-200 shadow-lg hover:shadow-xl"
-              >
-                <svg
-                  className="w-4 h-4 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+            {canModifyPost() && (
+              <div className="mt-12 pt-8 border-t border-slate-200 flex flex-wrap gap-4">
+                <Link
+                  to={`/edit/${post._id}`}
+                  className="inline-flex items-center px-6 py-3 bg-linear-to-r from-blue-500 to-purple-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-purple-700 transform hover:-translate-y-0.5 transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                  />
-                </svg>
-                Edit Post
-              </Link>
+                  <svg
+                    className="w-4 h-4 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
+                  </svg>
+                  Edit Post
+                </Link>
 
-              <button
-                className={`inline-flex items-center px-6 py-3 border border-red-300 text-red-700 font-medium rounded-lg hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200 ${
-                  deleting
-                    ? "opacity-50 cursor-not-allowed"
-                    : "hover:-translate-y-0.5"
-                }`}
-                disabled={deleting}
-                onClick={async () => {
-                  if (
-                    window.confirm(
-                      "Are you sure you want to delete this post? This action cannot be undone."
-                    )
-                  ) {
-                    setDeleteError(null);
-                    setDeleting(true);
-                    const result = await deletePost(post._id);
-                    if (result.success) {
-                      navigate("/");
-                    } else {
-                      setDeleteError(result.error);
+                <button
+                  className={`inline-flex items-center px-6 py-3 border border-red-300 text-red-700 font-medium rounded-lg hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200 ${
+                    deleting
+                      ? "opacity-50 cursor-not-allowed"
+                      : "hover:-translate-y-0.5"
+                  }`}
+                  disabled={deleting}
+                  onClick={async () => {
+                    if (
+                      window.confirm(
+                        "Are you sure you want to delete this post? This action cannot be undone."
+                      )
+                    ) {
+                      setDeleteError(null);
+                      setDeleting(true);
+                      const result = await deletePost(post._id);
+                      if (result.success) {
+                        navigate("/");
+                      } else {
+                        setDeleteError(result.error);
+                      }
+                      setDeleting(false);
                     }
-                    setDeleting(false);
-                  }
-                }}
-              >
-                {deleting ? (
-                  <>
-                    <svg
-                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-red-700"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
+                  }}
+                >
+                  {deleting ? (
+                    <>
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-red-700"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        className="w-4 h-4 mr-2"
+                        fill="none"
                         stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    Deleting...
-                  </>
-                ) : (
-                  <>
-                    <svg
-                      className="w-4 h-4 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    </svg>
-                    Delete Post
-                  </>
-                )}
-              </button>
-            </div>
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                      Delete Post
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
 
             {/* Delete Error */}
             {deleteError && (

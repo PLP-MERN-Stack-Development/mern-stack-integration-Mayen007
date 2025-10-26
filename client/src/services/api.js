@@ -47,7 +47,29 @@ api.interceptors.response.use(
       localStorage.removeItem('user');
       window.location.href = '/login';
     }
-    return Promise.reject(error);
+
+    // Extract meaningful error message from response
+    let errorMessage = 'An error occurred';
+    if (error.response && error.response.data) {
+      if (error.response.data.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response.data.error) {
+        errorMessage = error.response.data.error;
+      } else if (typeof error.response.data === 'string') {
+        errorMessage = error.response.data;
+      } else if (error.response.data.errors && Array.isArray(error.response.data.errors)) {
+        errorMessage = error.response.data.errors.map(e => e.message || e).join(', ');
+      }
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
+    // Create a new error with the extracted message
+    const customError = new Error(errorMessage);
+    customError.status = error.response?.status;
+    customError.data = error.response?.data;
+
+    return Promise.reject(customError);
   }
 );
 

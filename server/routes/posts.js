@@ -418,14 +418,29 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ message: 'Post not found' });
     }
 
-    const requesterId = req.user && (req.user._id ? req.user._id.toString() : req.user.userId);
-    if (existingPost.author.toString() !== requesterId) {
+    // Get requester ID with proper validation
+    if (!req.user || (!req.user._id && !req.user.userId)) {
+      return res.status(401).json({ message: 'User authentication required' });
+    }
+
+    const requesterId = req.user._id ? req.user._id.toString() : req.user.userId.toString();
+    const postAuthorId = existingPost.author.toString();
+
+    console.log('Delete attempt:', {
+      postId: id,
+      requesterId,
+      postAuthorId,
+      isOwner: postAuthorId === requesterId
+    });
+
+    if (postAuthorId !== requesterId) {
       return res.status(403).json({ message: 'You can only delete your own posts' });
     }
 
     await Post.findByIdAndDelete(id);
     res.status(200).json({ message: `Post ${id} deleted successfully` });
   } catch (error) {
+    console.error('Delete post error:', error);
     res.status(500).json({ error: error.message });
   }
 });
