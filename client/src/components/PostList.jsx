@@ -180,12 +180,19 @@ const PostList = () => {
                   <div className="flex items-center space-x-2">
                     <div className="w-8 h-8 bg-linear-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                       <span className="text-white text-xs font-bold">
-                        {typeof post.author === "string"
+                        {typeof post.author === "object" && post.author.name
+                          ? post.author.name.charAt(0).toUpperCase()
+                          : typeof post.author === "string"
                           ? post.author.charAt(0).toUpperCase()
                           : "A"}
                       </span>
                     </div>
-                    <span>By {post.author || "Anonymous"}</span>
+                    <span>
+                      By{" "}
+                      {typeof post.author === "object" && post.author.name
+                        ? post.author.name
+                        : post.author || "Anonymous"}
+                    </span>
                   </div>
                   <div className="text-xs text-slate-400">
                     {post.createdAt &&

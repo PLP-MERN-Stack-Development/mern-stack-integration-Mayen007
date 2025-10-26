@@ -140,9 +140,8 @@ router.post(
       postData.author = req.user._id || req.user.userId;
 
       const newPost = new Post(postData);
-      await newPost.save();
-
-      res.status(201).json({ message: 'Post created successfully', data: newPost });
+      const populatedPost = await newPost.populate('author', 'name email');
+      res.status(201).json({ message: 'Post created successfully', data: populatedPost });
     } catch (error) {
       console.error('Post creation error:', error);
       // If Mongoose validation error, return 400 with details

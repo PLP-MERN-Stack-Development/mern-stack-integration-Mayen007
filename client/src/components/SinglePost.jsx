@@ -212,14 +212,18 @@ export default function SinglePost() {
             <div className="flex items-center space-x-4">
               <div className="w-12 h-12 bg-linear-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                 <span className="text-white text-lg font-bold">
-                  {typeof post.author === "string"
+                  {typeof post.author === "object" && post.author.name
+                    ? post.author.name.charAt(0).toUpperCase()
+                    : typeof post.author === "string"
                     ? post.author.charAt(0).toUpperCase()
                     : "A"}
                 </span>
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-white">
-                  {post.author || "Anonymous Author"}
+                  {typeof post.author === "object" && post.author.name
+                    ? post.author.name
+                    : post.author || "Anonymous Author"}
                 </h3>
                 <p className="text-slate-300 text-sm">
                   Published on{" "}
