@@ -284,7 +284,9 @@ const CreateEditPostForm = () => {
                         : "border-slate-200 focus:border-blue-500"
                     }`}
                   >
-                    <option value="">Select a category...</option>
+                    <option value="" disabled>
+                      Select a category...
+                    </option>
                     {categories &&
                       categories.map((cat) => (
                         <option key={cat._id} value={cat._id}>

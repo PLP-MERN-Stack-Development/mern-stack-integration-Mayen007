@@ -136,7 +136,7 @@ router.get('/search', async (req, res) => {
         $or: [
           { title: searchRegex },
           { content: searchRegex }
-          // { tags: { $regex: searchRegex } } // Temporarily disabled
+          // { tags: { $regex: searchQuery } } // Temporarily disabled
         ]
       };
     }
@@ -173,6 +173,79 @@ router.get('/search', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// GET comments for a specific post
+router.get('/:postId/comments', async (req, res) => {
+  try {
+    const { postId } = req.params;
+
+    // Check if post exists
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    // Get comments with populated user data
+    const postWithComments = await Post.findById(postId)
+      .populate('comments.user', 'name email')
+      .select('comments');
+
+    res.status(200).json(postWithComments.comments);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ADD comment to a specific post (Protected route)
+router.post(
+  '/:postId/comments',
+  authenticateToken,
+  [
+    body('content').isString().trim().notEmpty().isLength({ max: 1000 }),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const { postId } = req.params;
+      const { content } = req.body;
+
+      // Check if post exists
+      const post = await Post.findById(postId);
+      if (!post) {
+        return res.status(404).json({ message: 'Post not found' });
+      }
+
+      // Add comment using the model's addComment method
+      const newComment = {
+        user: req.user._id || req.user.userId,
+        content: content.trim(),
+        createdAt: new Date()
+      };
+
+      post.comments.push(newComment);
+      await post.save();
+
+      // Populate the new comment's user data
+      const populatedPost = await Post.findById(postId)
+        .populate('comments.user', 'name email')
+        .select('comments');
+
+      // Return the newly added comment
+      const addedComment = populatedPost.comments[populatedPost.comments.length - 1];
+
+      res.status(201).json({
+        message: 'Comment added successfully',
+        comment: addedComment
+      });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+);
 
 // GET single post by ID
 router.get('/:id', async (req, res) => {
@@ -215,7 +288,9 @@ router.get('/:id', async (req, res) => {
         console.log('Access denied: Token verification failed', err.message);
         return res.status(403).json({ message: 'Invalid authentication token.' });
       }
-    } res.status(200).json(post);
+    }
+
+    res.status(200).json(post);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -385,5 +460,4 @@ router.patch('/:id/publish', authenticateToken, async (req, res) => {
   }
 });
 
-module.exports = router;
 module.exports = router;

@@ -17,6 +17,13 @@ export default function SinglePost() {
   const [error, setError] = useState(null);
   const [isUnauthorized, setIsUnauthorized] = useState(false);
 
+  // Comments state
+  const [comments, setComments] = useState([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentsError, setCommentsError] = useState(null);
+  const [newComment, setNewComment] = useState("");
+  const [submittingComment, setSubmittingComment] = useState(false);
+
   useEffect(() => {
     const fetchPost = async () => {
       try {
@@ -46,6 +53,47 @@ export default function SinglePost() {
       fetchPost();
     }
   }, [id]);
+
+  // Fetch comments when post is loaded
+  useEffect(() => {
+    const fetchComments = async () => {
+      if (!post) return;
+
+      try {
+        setCommentsLoading(true);
+        setCommentsError(null);
+        const commentsData = await postService.getComments(post._id);
+        setComments(commentsData);
+      } catch (err) {
+        console.error("Error fetching comments:", err);
+        setCommentsError("Failed to load comments");
+      } finally {
+        setCommentsLoading(false);
+      }
+    };
+
+    fetchComments();
+  }, [post]);
+
+  // Handle adding a new comment
+  const handleAddComment = async (e) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+
+    try {
+      setSubmittingComment(true);
+      const result = await postService.addComment(post._id, {
+        content: newComment.trim(),
+      });
+      setComments((prev) => [...prev, result.comment]);
+      setNewComment("");
+    } catch (err) {
+      console.error("Error adding comment:", err);
+      setCommentsError("Failed to add comment");
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -393,6 +441,128 @@ export default function SinglePost() {
             )}
           </div>
         </article>
+
+        {/* Comments Section */}
+        <div className="mt-12">
+          <h2 className="text-2xl font-bold text-slate-800 mb-6">
+            Comments ({comments.length})
+          </h2>
+
+          {/* Comments List */}
+          <div className="space-y-4">
+            {commentsLoading ? (
+              <div className="animate-pulse flex flex-col space-y-4">
+                <div className="h-12 bg-slate-100 rounded-lg"></div>
+                <div className="h-12 bg-slate-100 rounded-lg"></div>
+                <div className="h-12 bg-slate-100 rounded-lg"></div>
+              </div>
+            ) : commentsError ? (
+              <div className="text-red-500 text-sm">{commentsError}</div>
+            ) : comments.length === 0 ? (
+              <div className="text-slate-500 text-sm italic">
+                No comments yet. Be the first to comment!
+              </div>
+            ) : (
+              comments.map((comment) => (
+                <div
+                  key={comment._id}
+                  className="p-4 bg-slate-50 rounded-lg shadow-sm"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                      <span className="text-white font-semibold text-lg">
+                        {comment.user?.name
+                          ? comment.user.name.charAt(0).toUpperCase()
+                          : "A"}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-slate-700">
+                        {comment.user?.name || "Anonymous"}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {new Date(comment.createdAt).toLocaleString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: true,
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-2 text-slate-700 text-sm leading-relaxed">
+                    {comment.content}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Add Comment Form */}
+          {isAuthenticated ? (
+            <div className="mt-8 p-4 bg-slate-50 rounded-lg shadow-sm">
+              <h3 className="text-lg font-semibold text-slate-800 mb-4">
+                Add a Comment
+              </h3>
+              <form
+                onSubmit={handleAddComment}
+                className="flex flex-col sm:flex-row gap-4"
+              >
+                <textarea
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  className="flex-1 p-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  rows="3"
+                  placeholder="Write your comment here..."
+                  required
+                ></textarea>
+                <button
+                  type="submit"
+                  className="inline-flex items-center justify-center px-6 py-3 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 transition-all duration-200 shadow-md"
+                  disabled={submittingComment}
+                >
+                  {submittingComment ? (
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                  ) : (
+                    "Submit Comment"
+                  )}
+                </button>
+              </form>
+            </div>
+          ) : (
+            <div className="mt-8 p-4 bg-slate-50 border border-slate-200 rounded-lg">
+              <p className="text-slate-600">
+                <Link
+                  to="/login"
+                  className="text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  Sign in
+                </Link>{" "}
+                to leave a comment.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

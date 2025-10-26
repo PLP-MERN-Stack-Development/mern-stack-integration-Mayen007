@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import useAuth from "../context/useAuth";
+import blogLogo from "/blog-logo.svg";
 
 export default function Navigation() {
   const { isAuthenticated, user, logout } = useAuth();
@@ -16,15 +17,7 @@ export default function Navigation() {
               to="/"
               className="flex items-center space-x-2 text-white hover:text-blue-400 transition-colors duration-200"
             >
-              <div className="w-8 h-8 bg-linear-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <svg
-                  className="w-5 h-5 text-white"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
+              <img src={blogLogo} alt="Blog Logo" className="h-8 w-8" />
               <span className="text-xl font-bold bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                 BlogHub
               </span>
