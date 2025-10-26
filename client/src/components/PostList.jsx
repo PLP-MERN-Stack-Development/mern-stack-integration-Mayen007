@@ -14,6 +14,13 @@ const PostList = () => {
     goToPage,
     goToNextPage,
     goToPrevPage,
+    // Search
+    searchQuery,
+    setSearchQuery,
+    isSearching,
+    isSearchMode,
+    searchPosts,
+    clearSearch,
   } = useGlobalContext();
   const [deletingId, setDeletingId] = React.useState(null);
   const [deleteError, setDeleteError] = React.useState(null);
@@ -145,6 +152,75 @@ const PostList = () => {
             </div>
           </div>
         )}
+
+        {/* Search Section */}
+        <div className="mb-8">
+          <div className="max-w-md mx-auto">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (searchQuery.trim()) {
+                  searchPosts(searchQuery.trim());
+                }
+              }}
+              className="flex gap-2"
+            >
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search posts by title or content..."
+                  className="w-full px-4 py-3 pl-12 pr-4 text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
+                  disabled={isSearching}
+                />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg
+                    className="h-5 w-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <button
+                type="submit"
+                disabled={isSearching || !searchQuery.trim()}
+                className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
+              >
+                {isSearching ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                    Searching...
+                  </div>
+                ) : (
+                  "Search"
+                )}
+              </button>
+              {isSearchMode && (
+                <button
+                  type="button"
+                  onClick={clearSearch}
+                  className="px-4 py-3 bg-gray-500 text-white font-medium rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200 shadow-sm"
+                >
+                  Clear
+                </button>
+              )}
+            </form>
+            {isSearchMode && (
+              <p className="mt-2 text-sm text-gray-600 text-center">
+                Showing search results for "{searchQuery}"
+              </p>
+            )}
+          </div>
+        </div>
 
         {/* Posts Grid */}
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">

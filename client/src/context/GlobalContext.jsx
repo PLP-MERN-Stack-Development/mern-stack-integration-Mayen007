@@ -67,6 +67,11 @@ export const GlobalProvider = ({ children }) => {
   const [totalPosts, setTotalPosts] = useState(0);
   const [postsPerPage] = useState(10);
 
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [isSearchMode, setIsSearchMode] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -184,6 +189,45 @@ export const GlobalProvider = ({ children }) => {
     setCurrentPage(1);
   };
 
+  // Search functions
+  const searchPosts = async (query) => {
+    if (!query || query.trim().length === 0) {
+      clearSearch();
+      return;
+    }
+
+    setIsSearching(true);
+    setSearchQuery(query.trim());
+    setIsSearchMode(true);
+    setCurrentPage(1); // Reset to first page for search results
+
+    try {
+      const response = await postService.searchPosts(query.trim());
+      if (response.posts && response.pagination) {
+        setPosts(Array.isArray(response.posts) ? response.posts : []);
+        setTotalPages(response.pagination.totalPages || 1);
+        setTotalPosts(response.pagination.totalPosts || 0);
+      } else {
+        setPosts([]);
+        setTotalPages(1);
+        setTotalPosts(0);
+      }
+    } catch (err) {
+      setError(err.message || "Search failed");
+      setPosts([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    setIsSearchMode(false);
+    setCurrentPage(1);
+    // Trigger a refetch of all posts
+    window.location.reload(); // Simple way to reset, or we could call fetchData
+  };
+
   const value = {
     posts,
     setPosts,
@@ -205,6 +249,13 @@ export const GlobalProvider = ({ children }) => {
     goToNextPage,
     goToPrevPage,
     resetPagination,
+    // Search
+    searchQuery,
+    setSearchQuery,
+    isSearching,
+    isSearchMode,
+    searchPosts,
+    clearSearch,
   };
 
   return (

@@ -79,6 +79,96 @@ router.get('/my-posts', authenticateToken, async (req, res) => {
   }
 });
 
+// SEARCH posts by query (title, content, tags)
+router.get('/search', async (req, res) => {
+  try {
+    const { q: searchQuery, page = 1, limit = 10 } = req.query;
+
+    if (!searchQuery || searchQuery.trim().length === 0) {
+      return res.status(400).json({ error: 'Search query is required' });
+    }
+
+    // Build search query - search in title and content (temporarily exclude tags)
+    const searchRegex = new RegExp(searchQuery.trim(), 'i');
+
+    // Check if user is authenticated
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.substring(7) : null;
+
+    let query = {};
+
+    if (token) {
+      try {
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key-here');
+        // If authenticated, search published posts + user's own posts (including drafts)
+        query = {
+          $or: [
+            { isPublished: true },
+            { author: decoded.userId }
+          ],
+          $or: [
+            { title: searchRegex },
+            { content: searchRegex }
+            // { tags: { $regex: searchRegex } } // Temporarily disabled
+          ]
+        };
+      } catch (err) {
+        // If token is invalid, just search published posts
+        query = {
+          isPublished: true,
+          $or: [
+            { title: searchRegex },
+            { content: searchRegex }
+            // { tags: { $regex: searchRegex } } // Temporarily disabled
+          ]
+        };
+      }
+    } else {
+      // If not authenticated, only search published posts
+      query = {
+        isPublished: true,
+        $or: [
+          { title: searchRegex },
+          { content: searchRegex }
+          // { tags: { $regex: searchRegex } } // Temporarily disabled
+        ]
+      };
+    }
+
+    // Pagination
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 10;
+    const skip = (pageNum - 1) * limitNum;
+
+    // Get total count
+    const totalPosts = await Post.countDocuments(query);
+    const totalPages = Math.ceil(totalPosts / limitNum);
+
+    // Get search results
+    const posts = await Post.find(query)
+      .populate('author', 'name email')
+      .populate('category', 'name')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum);
+
+    res.status(200).json({
+      posts,
+      pagination: {
+        currentPage: pageNum,
+        totalPages,
+        totalPosts,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1,
+        searchQuery: searchQuery.trim()
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // GET single post by ID
 router.get('/:id', async (req, res) => {
   try {
@@ -165,6 +255,7 @@ router.post(
       postData.author = req.user._id || req.user.userId;
 
       const newPost = new Post(postData);
+      await newPost.save();
       const populatedPost = await newPost.populate('author', 'name email');
       res.status(201).json({ message: 'Post created successfully', data: populatedPost });
     } catch (error) {
