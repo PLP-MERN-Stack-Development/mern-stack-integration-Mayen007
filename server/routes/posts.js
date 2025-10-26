@@ -34,8 +34,33 @@ router.get('/', async (req, res) => {
       query = { isPublished: true };
     }
 
-    const posts = await Post.find(query).populate('author', 'name email').populate('category', 'name');
-    res.status(200).json(posts);
+    // Pagination parameters
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Get total count for pagination
+    const totalPosts = await Post.countDocuments(query);
+    const totalPages = Math.ceil(totalPosts / limit);
+
+    // Get paginated posts
+    const posts = await Post.find(query)
+      .populate('author', 'name email')
+      .populate('category', 'name')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    res.status(200).json({
+      posts,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalPosts,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
+      }
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

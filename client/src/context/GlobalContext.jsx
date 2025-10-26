@@ -61,6 +61,12 @@ export const GlobalProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalPosts, setTotalPosts] = useState(0);
+  const [postsPerPage] = useState(10);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -68,12 +74,23 @@ export const GlobalProvider = ({ children }) => {
         setError(null);
 
         // Fetch posts and categories in parallel
-        const [postsData, categoriesData] = await Promise.all([
-          postService.getAllPosts(),
+        const [postsResponse, categoriesData] = await Promise.all([
+          postService.getAllPosts(currentPage, postsPerPage),
           categoryService.getAllCategories(),
         ]);
 
-        setPosts(Array.isArray(postsData) ? postsData : []);
+        // Handle new pagination response format
+        if (postsResponse.posts && postsResponse.pagination) {
+          setPosts(
+            Array.isArray(postsResponse.posts) ? postsResponse.posts : []
+          );
+          setTotalPages(postsResponse.pagination.totalPages || 1);
+          setTotalPosts(postsResponse.pagination.totalPosts || 0);
+        } else {
+          // Fallback for old format
+          setPosts(Array.isArray(postsResponse) ? postsResponse : []);
+        }
+
         setCategories(Array.isArray(categoriesData) ? categoriesData : []);
       } catch (err) {
         setError(err.message);
@@ -84,7 +101,7 @@ export const GlobalProvider = ({ children }) => {
     };
 
     fetchData();
-  }, []);
+  }, [currentPage, postsPerPage]);
 
   // Optimistic create post
   const createPost = async (newPost) => {
@@ -102,6 +119,8 @@ export const GlobalProvider = ({ children }) => {
       const result = await postService.createPost(newPost);
       const createdPost = result.data || result;
       setPosts((prev) => prev.map((p) => (p._id === tempId ? createdPost : p)));
+      // Reset to first page to show the new post
+      resetPagination();
       return { success: true };
     } catch (err) {
       setPosts((prev) => prev.filter((p) => p._id !== tempId));
@@ -142,6 +161,29 @@ export const GlobalProvider = ({ children }) => {
     }
   };
 
+  // Pagination functions
+  const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const goToPrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const resetPagination = () => {
+    setCurrentPage(1);
+  };
+
   const value = {
     posts,
     setPosts,
@@ -154,6 +196,15 @@ export const GlobalProvider = ({ children }) => {
     deletePost,
     createCategory,
     editCategory,
+    // Pagination
+    currentPage,
+    totalPages,
+    totalPosts,
+    postsPerPage,
+    goToPage,
+    goToNextPage,
+    goToPrevPage,
+    resetPagination,
   };
 
   return (
