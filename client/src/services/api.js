@@ -2,13 +2,26 @@
 
 import axios from 'axios';
 
+// Get the base URL for API calls
+const getBaseURL = () => import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : '/api';
+
+// Get the base URL for static assets (images)
+const getAssetBaseURL = () => import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}` : '';
+
 // Create axios instance with base URL
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : '/api',
+  baseURL: getBaseURL(),
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+// Helper function to get full image URL
+export const getImageUrl = (imagePath) => {
+  if (!imagePath) return '';
+  if (imagePath.startsWith('http')) return imagePath; // Already a full URL
+  return `${getAssetBaseURL()}${imagePath}`;
+};
 
 // Add request interceptor for authentication
 api.interceptors.request.use(
@@ -64,16 +77,16 @@ export const postService = {
 
   // Create a new post
   createPost: async (postData) => {
-    // Let the browser set Content-Type (and boundary) for FormData
-    const config = postData instanceof FormData ? {} : {};
+    // For FormData, let axios set Content-Type automatically
+    const config = postData instanceof FormData ? { headers: { 'Content-Type': undefined } } : {};
     const response = await api.post('/posts', postData, config);
     return response.data;
   },
 
   // Update an existing post
   updatePost: async (id, postData) => {
-    // Let the browser set Content-Type for FormData
-    const config = postData instanceof FormData ? {} : {};
+    // For FormData, let axios set Content-Type automatically
+    const config = postData instanceof FormData ? { headers: { 'Content-Type': undefined } } : {};
     const response = await api.put(`/posts/${id}`, postData, config);
     return response.data;
   },

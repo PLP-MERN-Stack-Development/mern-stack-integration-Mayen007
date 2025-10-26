@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useGlobalContext } from "../context/useGlobalContext";
+import { getImageUrl } from "../services/api";
 
 const PostList = () => {
   const {
@@ -231,12 +232,23 @@ const PostList = () => {
             >
               {/* Post Header */}
               <div className="h-48 bg-linear-to-br from-blue-500 via-purple-500 to-pink-500 relative overflow-hidden">
-                <div className="absolute inset-0 bg-black/20"></div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <h2 className="text-white text-xl font-bold px-6 text-center line-clamp-3">
-                    {post.title}
-                  </h2>
-                </div>
+                {post.featuredImage &&
+                post.featuredImage !== "default-post.jpg" ? (
+                  <img
+                    src={getImageUrl(post.featuredImage)}
+                    alt={post.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <>
+                    <div className="absolute inset-0 bg-black/20"></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <h2 className="text-white text-xl font-bold px-6 text-center line-clamp-3">
+                        {post.title}
+                      </h2>
+                    </div>
+                  </>
+                )}
                 {/* Featured badge for first post */}
                 {index === 0 && (
                   <div className="absolute top-4 right-4">

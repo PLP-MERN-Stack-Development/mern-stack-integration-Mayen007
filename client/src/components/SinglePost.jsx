@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useGlobalContext } from "../context/useGlobalContext";
 import { useNavigate } from "react-router-dom";
 import { useParams, Link } from "react-router-dom";
-import { postService } from "../services/api";
+import { postService, getImageUrl } from "../services/api";
 import useAuth from "../context/useAuth";
 
 export default function SinglePost() {
@@ -243,7 +243,7 @@ export default function SinglePost() {
           {post.featuredImage && post.featuredImage !== "default-post.jpg" && (
             <div className="h-96 overflow-hidden">
               <img
-                src={post.featuredImage}
+                src={getImageUrl(post.featuredImage)}
                 alt={post.title}
                 className="w-full h-full object-cover"
               />

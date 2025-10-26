@@ -256,7 +256,7 @@ router.post(
 
       const newPost = new Post(postData);
       await newPost.save();
-      const populatedPost = await newPost.populate('author', 'name email');
+      const populatedPost = await newPost.populate('author', 'name email').populate('category', 'name');
       res.status(201).json({ message: 'Post created successfully', data: populatedPost });
     } catch (error) {
       console.error('Post creation error:', error);
@@ -312,7 +312,9 @@ router.put(
         return res.status(403).json({ message: 'You can only update your own posts' });
       }
 
-      const post = await Post.findByIdAndUpdate(id, updateData, { new: true });
+      const post = await Post.findByIdAndUpdate(id, updateData, { new: true })
+        .populate('author', 'name email')
+        .populate('category', 'name');
       res.status(200).json({ message: `Post ${id} updated successfully`, data: post });
     } catch (error) {
       console.error('Post update error:', error);

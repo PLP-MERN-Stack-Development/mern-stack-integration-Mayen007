@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useGlobalContext } from "../context/useGlobalContext";
+import { getImageUrl } from "../services/api";
 
 const CreateEditPostForm = () => {
   const { posts, categories, createPost, editPost, loading } =
@@ -26,7 +27,7 @@ const CreateEditPostForm = () => {
       if (postToEdit) {
         setTitle(postToEdit.title);
         setContent(postToEdit.content);
-        setCategoryId(postToEdit.category || "");
+        setCategoryId(postToEdit.category?._id || postToEdit.category || "");
         setExcerpt(postToEdit.excerpt || "");
         setTags(postToEdit.tags ? postToEdit.tags.join(", ") : "");
         setFeaturedImage(postToEdit.featuredImage || null);
@@ -403,10 +404,32 @@ const CreateEditPostForm = () => {
                   onChange={(e) => setFeaturedImage(e.target.files[0])}
                   accept="image/*"
                 />
-                {featuredImage && typeof featuredImage === "string" && (
-                  <p className="mt-2 text-sm text-slate-500">
-                    Current image: {featuredImage.split("/").pop()}
-                  </p>
+                {featuredImage && (
+                  <>
+                    {typeof featuredImage === "string" ? (
+                      <div className="mt-2">
+                        <p className="text-sm text-slate-500 mb-2">
+                          Current image: {featuredImage.split("/").pop()}
+                        </p>
+                        <img
+                          src={getImageUrl(featuredImage)}
+                          alt="Current featured image"
+                          className="w-32 h-32 object-cover rounded-md border border-slate-300"
+                        />
+                      </div>
+                    ) : (
+                      <div className="mt-2">
+                        <p className="text-sm text-slate-500 mb-2">
+                          New image selected: {featuredImage.name}
+                        </p>
+                        <img
+                          src={URL.createObjectURL(featuredImage)}
+                          alt="New featured image"
+                          className="w-32 h-32 object-cover rounded-md border border-slate-300"
+                        />
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 
